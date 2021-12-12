@@ -3,6 +3,7 @@ from paddle.io import DataLoader
 from paddle.vision import datasets
 from paddle.vision import transforms
 
+
 def get_transforms(mode='train'):
     if mode == 'train':
         data_transforms = transforms.Compose([
