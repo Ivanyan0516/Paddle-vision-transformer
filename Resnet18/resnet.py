@@ -6,7 +6,8 @@ paddle.set_device('cpu')
 
 class Identity(nn.Layer):
     def __init__(self):
-        super().__init__()
+        # super().__init__()
+        super(Identity, self).__init__()
 
     def forward(self, x):
         return x

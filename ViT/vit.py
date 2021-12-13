@@ -28,6 +28,26 @@ class Mlp(nn.Layer):
         x = self.dropout(x)
         return x
 
+class Encoder(nn.Layer):
+    def __init__(self, embed_dim):
+        super(Encoder, self).__init__()
+        self.attn = Identity() #TODO
+        self.attn_norm = nn.LayerNorm(embed_dim)
+        self.mlp = Mlp(embed_dim)
+        self.mlp_norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, x):
+        h = x
+        x = self.attn_norm(x)
+        x = self.attn(x)
+        x = h + x
+
+        h = x
+        x = self.mlp_norm(x)
+        x = self.mlp(x)
+        x = h + x
+        return x
+
 class PatchEmbedding(nn.Layer):
     def __init__(self, image_size, patch_size, in_channels, embed_dim, dropout=0.):
         super(PatchEmbedding, self).__init__()
@@ -42,6 +62,7 @@ class PatchEmbedding(nn.Layer):
     def forward(self, x):
         # x [1, 1, 28, 28]
         x = self.patch_embed(x)
+        print('check here', x.shape)
         # x [n, c', h', w']
         x = x.flatten(2)   #[n, embed_dim, h'*w']
         x = x.transpose([0, 2, 1])  #[n, h'*w', embed_dim]
@@ -50,25 +71,33 @@ class PatchEmbedding(nn.Layer):
 
 
 
+class ViT(nn.Layer):
+    def __init__(self):
+        super(ViT, self).__init__()
+        self.patch_embed = PatchEmbedding(224, 7, 3, 16)
+        layer_list = [Encoder(16) for i in range(5)]
+        self.encoders = nn.LayerList(layer_list)
+        self.head = nn.Linear(16, 10)  # 10: num_classes
+        self.avgpool = nn.AdaptiveAvgPool1D(1)
+
+    def forward(self, x):
+        x = self.patch_embed(x)
+        # print('check', x.shape)  #[4, 1024, 16] [b, h'*w', embed_dim]
+        for encoder in self.encoders:
+            x = encoder(x)
+        # layernorm
+        # [n, h'*w', c]
+        x = x.transpose([0, 2, 1])
+        x = self.avgpool(x)  #[n, c, 1]
+        x = x.flatten(1) #[n, c]
+        x = self.head(x)
+        return x
+
 def main():
-    # 1.load image
-    img = np.array(paddle.randint(0, 255, [28, 28]))
-    sample = paddle.to_tensor(img, dtype='float32')
-    # simulate a batch of data
-    sample = sample.reshape([1, 1, 28, 28])
-    print(sample.shape)
-
-    # 2. Patch embedding
-    patch_embed = PatchEmbedding(image_size=28, patch_size=7, in_channels=1, embed_dim=1)
-    out = patch_embed(sample)
+    t = paddle.randn([4, 3, 224, 224])
+    model = ViT()
+    out = model(t)
     print(out.shape)
-
-
-    # 3. MLP
-    mlp = Mlp(1)
-    out = mlp(out)
-    print('out.shape=', out.shape)
-
 
 if __name__ == '__main__':
     main()
