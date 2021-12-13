@@ -86,6 +86,7 @@ class ViT(nn.Layer):
         for encoder in self.encoders:
             x = encoder(x)
         # layernorm
+
         # [n, h'*w', c]
         x = x.transpose([0, 2, 1])
         x = self.avgpool(x)  #[n, c, 1]
