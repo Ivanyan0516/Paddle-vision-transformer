@@ -69,7 +69,8 @@ def main():
     val_dataloader = get_dataloader(val_dataset, mode='test', batch_size=batch_size)
 
     criterion = nn.CrossEntropyLoss()
-    scheduler = paddle.optimizer.lr.CosineAnnealingDecay(0.02, total_epoch=total_epoch)
+    # scheduler = paddle.optimizer.lr.CosineAnnealingDecay(0.02, total_epoch=total_epoch)
+    scheduler = paddle.optimizer.lr.CosineAnnealingDecay(0.02, total_epoch)
 
     optimizer = paddle.optimizer.Momentum(learning_rate=scheduler,
                                           parameters=model.parameters(),

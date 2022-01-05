@@ -21,6 +21,32 @@ def windows_partition(x, window_size):
     return x
 
 
+# def generate_mask(window_size=4, shift_size=2, input_resolution=(8, 8)):
+#     H, W = input_resolution
+#     img_mask = paddle.zeros([1, H, W, 1])
+#     h_slices = [slice(0, -window_size),
+#                 slice(-window_size, -shift_size),
+#                 slice(-shift_size, None)]
+#     w_slices = [slice(0, -window_size),
+#                 slice(-window_size, -shift_size),
+#                 slice(-shift_size, None)]
+#     cnt = 0
+#     for h in h_slices:
+#         for w in w_slices:
+#             img_mask[:, h, w, :] = cnt
+#             cnt += 1
+#
+#     windows_mask = windows_partition(img_mask, window_size=window_size)
+#     windows_mask = windows_mask.reshape([-1, window_size * window_size])
+#     # [num_windows, ws*ws]
+#     attn_mask = windows_mask.unsqueeze(1) - windows_mask.unsqueeze(2)
+#     # [n, 1, ws*ws] - [n, ws*ws, 1] = [n, ws*ws, ws*ws]
+#     attn_mask = paddle.where(attn_mask != 0,
+#                              paddle.ones_like(attn_mask) * 255,
+#                              paddle.zeros_like(attn_mask))
+#     return attn_mask
+
+
 def generate_mask(window_size=4, shift_size=2, input_resolution=(8, 8)):
     H, W = input_resolution
     img_mask = paddle.zeros([1, H, W, 1])
@@ -45,7 +71,6 @@ def generate_mask(window_size=4, shift_size=2, input_resolution=(8, 8)):
                              paddle.ones_like(attn_mask) * 255,
                              paddle.zeros_like(attn_mask))
     return attn_mask
-
 
 def main():
     mask = generate_mask()
