@@ -25,7 +25,7 @@ class Block(nn.Layer):
 
         if stride == 2 or in_dim != out_dim:
             self.downsample = nn.Sequential(*[
-                nn.Conv2D(in_dim, out_dim, 1, stride=stride),
+                nn.Conv2D(in_dim, out_dim, kernel_size=1, stride=stride),
                 nn.BatchNorm2D(out_dim)])
         else:
             self.downsample = Identity()
@@ -47,6 +47,7 @@ class ResNet18(nn.Layer):
     def __init__(self, in_dim=64, num_classes=10):
         super().__init__()
         self.in_dim = in_dim
+        self.num_channels = 512
         # stem layers
         self.conv1 = nn.Conv2D(in_channels=3,
                                out_channels=in_dim,
@@ -76,29 +77,41 @@ class ResNet18(nn.Layer):
             layer_list.append(Block(self.in_dim, dim, stride=1))
         return nn.Sequential(*layer_list)
 
+    # class 10: Modify the forward, remove the head and classifier
     def forward(self, x):
         x = self.conv1(x)
-        # print('check:', x.shape)  #[4,64,32,32]
         x = self.bn1(x)
         x = self.relu(x)
         x = self.layers1(x)
-        # print('check:', x.shape)  #[4,64,32,32]
         x = self.layers2(x)
-        # print('check:', x.shape)  # [4,128,16,16]
         x = self.layers3(x)
         x = self.layers4(x)
-        # print('check:', x.shape)  # [4,512,4,4]
-        x = self.avgpool(x)
-        # print('check:', x.shape)  #[4,512,1,1]
-        x = x.flatten(1)
-        # print('check:', x.shape)  # [4,512]
-        x = self.classifier(x)
+        print('check:', x.shape)  # [4,512,28,28]
         return x
+
+    # def forward(self, x):
+    #     x = self.conv1(x)
+    #     # print('check:', x.shape)  #[4,64,32,32]
+    #     x = self.bn1(x)
+    #     x = self.relu(x)
+    #     x = self.layers1(x)
+    #     # print('check:', x.shape)  #[4,64,32,32]
+    #     x = self.layers2(x)
+    #     # print('check:', x.shape)  # [4,128,16,16]
+    #     x = self.layers3(x)
+    #     x = self.layers4(x)
+    #     # print('check:', x.shape)  # [4,512,4,4]
+    #     x = self.avgpool(x)
+    #     # print('check:', x.shape)  #[4,512,1,1]
+    #     x = x.flatten(1)
+    #     # print('check:', x.shape)  # [4,512]
+    #     x = self.classifier(x)
+    #     return x
 
 
 def main():
     # 1. Create a Tensor
-    t = paddle.randn([4, 3, 32, 32])
+    t = paddle.randn([4, 3, 224, 224])
     # print(t)
     model = ResNet18()
     out = model(t)
